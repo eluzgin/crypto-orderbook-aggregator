@@ -65,7 +65,7 @@ make
 ### 3. Run the Program
 Execute the compiled program:
 ```
-./OrderBookAggregator
+./OrderBook
 ```
 
 ## Docker Support
@@ -83,9 +83,13 @@ During development, mount your source code into the container for quick iteratio
 ```
 docker run -it -v $(pwd):/app orderbook-aggregator
 ```
-### 4. Debugging: Start an interactive shell in the container:
+### 4. Start an interactive shell in the container:
 ```
 docker run -it --entrypoint /bin/bash orderbook-aggregator
+```
+### 5. Run program in Docker shell:
+```
+./OrderBook
 ```
 
 ### Example program output:
