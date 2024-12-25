@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -167,10 +168,15 @@ int main() {
     double buyPrice = calculatePrice(allAsks, quantity);
     double sellPrice = calculatePrice(allBids, quantity);
 
+    std::ostringstream quantityStream;
+    quantityStream << std::fixed << std::setprecision(quantity == static_cast<int>(quantity) ? 0 : 2) << quantity;
+
     if (buyPrice >= 0)
-        std::cout << "Price to buy " << quantity << " BTC: $" << buyPrice << "\n";
+        std::cout << "Price to buy " << quantityStream.str() << " BTC: $"
+                  << std::fixed << std::setprecision(2) << buyPrice << "\n";
     if (sellPrice >= 0)
-        std::cout << "Price to sell " << quantity << " BTC: $" << sellPrice << "\n";
+        std::cout << "Price to sell " << quantityStream.str() << " BTC: $"
+                  << std::fixed << std::setprecision(2) << sellPrice << "\n";
 
     return 0;
 }
