@@ -95,8 +95,8 @@ docker run -it --entrypoint /bin/bash orderbook-aggregator
 ### Example program output:
 ```
 Enter quantity of BTC to buy/sell: 10
-Price to buy 10 BTC: $983881
-Price to sell 10 BTC: $983796
+Cost to buy 10 BTC: $983141.60
+Proceeds from selling 10 BTC: $983014.87
 ```
 
 

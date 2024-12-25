@@ -172,10 +172,10 @@ int main() {
     quantityStream << std::fixed << std::setprecision(quantity == static_cast<int>(quantity) ? 0 : 2) << quantity;
 
     if (buyPrice >= 0)
-        std::cout << "Price to buy " << quantityStream.str() << " BTC: $"
+        std::cout << "Cost to buy " << quantityStream.str() << " BTC: $"
                   << std::fixed << std::setprecision(2) << buyPrice << "\n";
     if (sellPrice >= 0)
-        std::cout << "Price to sell " << quantityStream.str() << " BTC: $"
+        std::cout << "Proceeds from selling " << quantityStream.str() << " BTC: $"
                   << std::fixed << std::setprecision(2) << sellPrice << "\n";
 
     return 0;
