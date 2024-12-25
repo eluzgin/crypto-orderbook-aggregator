@@ -104,4 +104,22 @@ Proceeds from selling 10 BTC: $983014.87
 1. [Simulating a financial exchange in Scala](https://falconair.github.io/2015/01/05/financial-exchange.html)
 
 ### Author:
-Eugene Luzgin, Dec 2024
+Eugene Luzgin, Dec 25, 2024  
+````
+         |
+        -+-
+         A
+        /=\               /\  /\    ___  _ __  _ __ __    __
+      i/ O \i            /  \/  \  / _ \| '__|| '__|\ \  / /
+      /=====\           / /\  /\ \|  __/| |   | |    \ \/ /
+      /  i  \           \ \ \/ / / \___/|_|   |_|     \  /
+    i/ O * O \i                                       / /
+    /=========\        __  __                        /_/    _
+    /  *   *  \        \ \/ /        /\  /\    __ _  ____  | |
+  i/ O   i   O \i       \  /   __   /  \/  \  / _` |/ ___\ |_|
+  /=============\       /  \  |__| / /\  /\ \| (_| |\___ \  _
+  /  O   i   O  \      /_/\_\      \ \ \/ / / \__,_|\____/ |_|
+i/ *   O   O   * \i
+/=================\
+       |___|
+````
