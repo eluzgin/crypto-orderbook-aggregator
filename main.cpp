@@ -165,18 +165,23 @@ int main() {
     std::cout << "Enter quantity of BTC to buy/sell: ";
     std::cin >> quantity;
 
-    double buyPrice = calculatePrice(allAsks, quantity);
-    double sellPrice = calculatePrice(allBids, quantity);
+    double buyTotal = calculatePrice(allAsks, quantity);
+    double sellTotal = calculatePrice(allBids, quantity);
+
+    double buyPrice = buyTotal/quantity;
+    double sellPrice = sellTotal/quantity;
 
     std::ostringstream quantityStream;
     quantityStream << std::fixed << std::setprecision(quantity == static_cast<int>(quantity) ? 0 : 2) << quantity;
 
-    if (buyPrice >= 0)
+    if (buyTotal >= 0)
         std::cout << "Cost to buy " << quantityStream.str() << " BTC: $"
-                  << std::fixed << std::setprecision(2) << buyPrice << "\n";
-    if (sellPrice >= 0)
+                  << std::fixed << std::setprecision(2) << buyTotal
+                  << " at a price: $" << buyPrice << "\n";
+    if (sellTotal >= 0)
         std::cout << "Proceeds from selling " << quantityStream.str() << " BTC: $"
-                  << std::fixed << std::setprecision(2) << sellPrice << "\n";
+                  << std::fixed << std::setprecision(2) << sellTotal
+                  << " at a price: $" << sellPrice << "\n";
 
     return 0;
 }
