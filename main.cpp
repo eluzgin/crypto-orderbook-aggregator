@@ -11,7 +11,23 @@
 struct OrderLevel {
     double price;
     double size;
+    std::string exchange;
 };
+
+struct SendOrder {
+    std::string exchange;
+    std::string type;
+    double price;
+    double limit;
+};
+
+struct LimitOrder {
+    std::string exchange;
+    std::string type;
+    double limitPrice;
+    double limitSize;
+};
+
 
 // Helper function for CURL write callback
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* userp) {
@@ -45,10 +61,10 @@ std::pair<std::vector<OrderLevel>, std::vector<OrderLevel>> parseCoinbase(const 
 
     if (reader.parse(data, root)) {
         for (const auto& bid : root["bids"]) {
-            bids.push_back({std::stod(bid[0].asString()), std::stod(bid[1].asString())});
+            bids.push_back({std::stod(bid[0].asString()), std::stod(bid[1].asString()), "Coinbase"});
         }
         for (const auto& ask : root["asks"]) {
-            asks.push_back({std::stod(ask[0].asString()), std::stod(ask[1].asString())});
+            asks.push_back({std::stod(ask[0].asString()), std::stod(ask[1].asString()), "Coinbase"});
         }
     }
 
@@ -63,10 +79,10 @@ std::pair<std::vector<OrderLevel>, std::vector<OrderLevel>> parseGemini(const st
 
     if (reader.parse(data, root)) {
         for (const auto& bid : root["bids"]) {
-            bids.push_back({std::stod(bid["price"].asString()), std::stod(bid["amount"].asString())});
+            bids.push_back({std::stod(bid["price"].asString()), std::stod(bid["amount"].asString()), "Gemini"});
         }
         for (const auto& ask : root["asks"]) {
-            asks.push_back({std::stod(ask["price"].asString()), std::stod(ask["amount"].asString())});
+            asks.push_back({std::stod(ask["price"].asString()), std::stod(ask["amount"].asString()), "Gemini"});
         }
     }
 
@@ -97,7 +113,7 @@ std::pair<std::vector<OrderLevel>, std::vector<OrderLevel>> parseKraken(const st
             if (bid.isArray() && bid.size() >= 2) {
                 double price = std::stod(bid[0].asString());
                 double size = std::stod(bid[1].asString());
-                bids.push_back({price, size});
+                bids.push_back({price, size, "Kraken"});
             }
         }
 
@@ -106,7 +122,7 @@ std::pair<std::vector<OrderLevel>, std::vector<OrderLevel>> parseKraken(const st
             if (ask.isArray() && ask.size() >= 2) {
                 double price = std::stod(ask[0].asString());
                 double size = std::stod(ask[1].asString());
-                asks.push_back({price, size});
+                asks.push_back({price, size, "Kraken"});
             }
         }
     } else {
@@ -147,6 +163,56 @@ double calculatePrice(const std::vector<OrderLevel>& levels, double quantity) {
     return totalCost;
 }
 
+void sweepOrderBook(std::vector<SendOrder>& orders, const std::string type, const std::vector<OrderLevel>& levels, double quantity) {
+    double totalCost = 0.0;
+    double remaining = quantity;
+
+    for (const auto& level : levels) {
+        if (remaining <= 0) break;
+        double tradeSize = std::min(level.size, remaining);
+        totalCost += tradeSize * level.price;
+        remaining -= tradeSize;
+        SendOrder order = {level.exchange, type, level.price, tradeSize};
+        orders.push_back(order);
+    }
+
+    if (remaining > 0) {
+        std::cerr << "Not enough liquidity to fulfill the order.\n";
+    }
+}
+
+LimitOrder calculateBuyLimitOrder(const std::string& exchange, const std::vector<SendOrder>& orders) {
+    double limitPrice = 0;
+    double limitSize = 0;
+
+    for (const auto& order : orders) {
+        if (order.exchange == exchange) {
+            if (limitSize == 0) {
+                limitPrice = order.price;
+            }
+            limitPrice = std::max(limitPrice, order.price);
+            limitSize += order.limit;
+        }
+    }
+    return {exchange, "Buy", limitPrice, limitSize};
+}
+
+LimitOrder calculateSellLimitOrder(const std::string& exchange, const std::vector<SendOrder>& orders) {
+    double limitPrice = 0;
+    double limitSize = 0;
+
+    for (const auto& order : orders) {
+        if (order.exchange == exchange) {
+            if (limitSize == 0) {
+                limitPrice = order.price;
+            }
+            limitPrice = std::min(limitPrice, order.price);
+            limitSize += order.limit;
+        }
+    }
+    return {exchange, "Sell", limitPrice, limitSize};
+}
+
 int main() {
     std::string coinbaseData = fetchData("https://api.exchange.coinbase.com/products/BTC-USD/book?level=2");
     std::string geminiData = fetchData("https://api.gemini.com/v1/book/BTCUSD");
@@ -182,6 +248,28 @@ int main() {
         std::cout << "Proceeds from selling " << quantityStream.str() << " BTC: $"
                   << std::fixed << std::setprecision(2) << sellTotal
                   << " at a price: $" << sellPrice << "\n";
+
+
+
+    std::vector<SendOrder> buyOrders;
+    sweepOrderBook(buyOrders, "Buy", allAsks, quantity);
+    std::cout << "Buy orders: " << buyOrders.size() << "\n";
+
+    std::vector<SendOrder> sellOrders;
+    sweepOrderBook(sellOrders, "Sell", allBids, quantity);
+    std::cout << "Sell orders: " << sellOrders.size() << "\n";
+
+    std::vector<std::string> exchanges = {"Coinbase", "Gemini", "Kraken"};
+
+    for (const auto& exchange : exchanges) {
+        LimitOrder buyLimitOrder = calculateBuyLimitOrder(exchange, buyOrders);
+        std::cout << buyLimitOrder.exchange << " Buy Limit Order: [Price: $" << buyLimitOrder.limitPrice
+                  << ", Size: " << buyLimitOrder.limitSize << " BTC]\n";
+
+        LimitOrder sellLimitOrder = calculateSellLimitOrder(exchange, sellOrders);
+        std::cout << sellLimitOrder.exchange << " Sell Limit Order: [Price: $" << sellLimitOrder.limitPrice
+                  << ", Size: " << sellLimitOrder.limitSize << " BTC]\n";
+    }
 
     return 0;
 }
